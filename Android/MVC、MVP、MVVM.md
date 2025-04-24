@@ -160,6 +160,7 @@ ViewModel 的生命周期与 Activity 的解耦设计使其在配置变更时保
 
 ### 4 各架构的优缺点
 #### 1、MVC
+```kotlin
 // Model
 data class User(val name: String, val age: Int)
 
@@ -182,15 +183,17 @@ class MainActivity : AppCompatActivity() {
         textView.text = "${user.name}, ${user.age}"
     }
 }
+```
 
 优点
-‌简单易用‌：适合小型项目或快速原型开发。
-‌职责初步分离‌：Model 和 View 有基本隔离。
+*‌简单易用‌：适合小型项目或快速原型开发。
+*‌职责初步分离‌：Model 和 View 有基本隔离。
 缺点
-‌高耦合‌：Activity 同时承担 View 和 Controller 职责，代码臃肿。
-‌难以测试‌：业务逻辑与 Android 组件强绑定，无法直接单元测试。
+*‌高耦合‌：Activity 同时承担 View 和 Controller 职责，代码臃肿。
+‌*难以测试‌：业务逻辑与 Android 组件强绑定，无法直接单元测试。
 
 #### 2、MVP
+```kotlin
 // Model
 data class User(val name: String, val age: Int)
 
@@ -222,14 +225,17 @@ class MainActivity : AppCompatActivity(), UserView {
         findViewById<TextView>(R.id.textView).text = "${user.name}, ${user.age}"
     }
 }
+```
+
 优点
-‌低耦合‌：Presenter 与 View 通过接口通信，便于单元测试。
-‌职责清晰‌：Presenter 处理业务逻辑，View 仅负责 UI。
+‌*低耦合‌：Presenter 与 View 通过接口通信，便于单元测试。
+‌*职责清晰‌：Presenter 处理业务逻辑，View 仅负责 UI。
 缺点
-‌接口膨胀‌：每个 View 需定义大量接口方法。
-‌生命周期管理复杂‌：需手动处理 Activity 重建时的 Presenter 状态。
+‌*接口膨胀‌：每个 View 需定义大量接口方法。
+*‌生命周期管理复杂‌：需手动处理 Activity 重建时的 Presenter 状态。
 
 #### 3、MVVM
+```koltin
 // Model
 data class User(val name: String, val age: Int)
 
@@ -258,15 +264,18 @@ class MainActivity : AppCompatActivity() {
         viewModel.loadUser()
     }
 }
+```
+
 优点
-‌数据驱动 UI‌：LiveData 自动响应数据变化，避免手动更新 UI。
-‌生命周期安全‌：ViewModel 自动管理数据生命周期。
-‌代码简洁‌：减少胶水代码（如 MVP 中的接口方法）。
+*‌数据驱动 UI‌：LiveData 自动响应数据变化，避免手动更新 UI。
+‌*生命周期安全‌：ViewModel 自动管理数据生命周期。
+‌*代码简洁‌：减少胶水代码（如 MVP 中的接口方法）。
 缺点
-‌学习成本‌：需掌握 Data Binding/LiveData 等组件。
-‌过度绑定风险‌：复杂的双向绑定可能导致调试困难。
+‌*学习成本‌：需掌握 Data Binding/LiveData 等组件。
+‌*过度绑定风险‌：复杂的双向绑定可能导致调试困难。
 
 #### 4、MVI
+```kotlin
 // Model（状态封装）
 data class UserState(
     val user: User? = null,
@@ -327,16 +336,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+```
+
 优点
-‌单向数据流‌：状态变化可预测，便于调试。
-‌强类型安全‌：通过密封类（Sealed Class）明确所有可能的 Intent 和状态。
-‌适合复杂场景‌：处理多状态（加载、成功、错误）更清晰。
+‌*单向数据流‌：状态变化可预测，便于调试。
+‌*强类型安全‌：通过密封类（Sealed Class）明确所有可能的 Intent 和状态。
+‌*适合复杂场景‌：处理多状态（加载、成功、错误）更清晰。
 缺点
-‌模板代码多‌：需定义大量状态类和 Intent 类。
-‌学习曲线陡峭‌：需熟悉响应式编程和状态管理。
+‌*模板代码多‌：需定义大量状态类和 Intent 类。
+‌*学习曲线陡峭‌：需熟悉响应式编程和状态管理。
 
 
-####总结：架构对比与选型建议
+#### 总结：架构对比与选型建议
 架构	适用场景	核心优势	主要缺点
 ‌MVC‌	简单页面、快速原型	实现简单	高耦合、难以测试
 ‌MVP‌	需要高可测试性的中型项目	职责分离、易于测试	接口膨胀、生命周期管理复杂
@@ -345,3 +356,4 @@ class MainActivity : AppCompatActivity() {
 
 
 
+ 
