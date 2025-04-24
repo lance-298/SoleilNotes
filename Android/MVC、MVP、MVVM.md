@@ -117,16 +117,16 @@ public class Utils {
         return new SimpleDateFormat("yyyy-MM-dd").format(date);
     }
 
-}    
+}
+```
 
 //4.双向绑定 @={}
 Observable、ObservableField、集合类型 Observable 容器类
 
 
-
 ### 3.2ViewModel 与 Activity 生命周期对应关系
 ![image](https://github.com/user-attachments/assets/9c9d9e81-86ef-44c9-a148-ee1033cafc5a)
-https://developer.android.google.cn/static/codelabs/android-lifecycles/img/1d42e8efcb42ff58_1920.png
+![image](https://developer.android.google.cn/static/codelabs/android-lifecycles/img/1d42e8efcb42ff58_1920.png)
 ![](../asset/viewmodel_1920.png)
 一、 ViewModel 生命周期范围‌
 
