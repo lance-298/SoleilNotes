@@ -125,8 +125,7 @@ Observable、ObservableField、集合类型 Observable 容器类
 
 
 ### 3.2ViewModel 与 Activity 生命周期对应关系
-//![image](https://github.com/user-attachments/assets/9c9d9e81-86ef-44c9-a148-ee1033cafc5a)
-//![image](https://developer.android.google.cn/static/codelabs/android-lifecycles/img/1d42e8efcb42ff58_1920.png)
+https://developer.android.google.cn/static/codelabs/android-lifecycles/img/1d42e8efcb42ff58_1920.png
 ![](../asset/viewmodel_1920.png)
 
 一、 ViewModel 生命周期范围‌
@@ -158,5 +157,191 @@ ViewModel ‌不应持有 Activity 的 Context‌，否则可能导致内存泄�
 
 总结
 ViewModel 的生命周期与 Activity 的解耦设计使其在配置变更时保持数据持久性，仅在 Activity 被永久销毁时释放资源。开发者需区分配置变更与永久销毁场景，合理管理数据与资源
+
+### 4 各架构的优缺点
+#### 1、MVC
+// Model
+data class User(val name: String, val age: Int)
+
+// View (Activity 或 XML 布局)
+class MainActivity : AppCompatActivity() {
+    private lateinit var textView: TextView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        textView = findViewById(R.id.textView)
+        
+        // Controller 逻辑直接在 Activity 中处理
+        val user = User("Alice", 30)
+        updateUI(user)
+    }
+
+    // Controller 方法
+    private fun updateUI(user: User) {
+        textView.text = "${user.name}, ${user.age}"
+    }
+}
+
+优点
+‌简单易用‌：适合小型项目或快速原型开发。
+‌职责初步分离‌：Model 和 View 有基本隔离。
+缺点
+‌高耦合‌：Activity 同时承担 View 和 Controller 职责，代码臃肿。
+‌难以测试‌：业务逻辑与 Android 组件强绑定，无法直接单元测试。
+
+#### 2、MVP
+// Model
+data class User(val name: String, val age: Int)
+
+// View 接口
+interface UserView {
+    fun showUserInfo(user: User)
+}
+
+// Presenter
+class UserPresenter(private val view: UserView) {
+    fun loadUser() {
+        val user = User("Bob", 25)
+        view.showUserInfo(user)
+    }
+}
+
+// View 实现（Activity）
+class MainActivity : AppCompatActivity(), UserView {
+    private lateinit var presenter: UserPresenter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        presenter = UserPresenter(this)
+        presenter.loadUser()
+    }
+
+    override fun showUserInfo(user: User) {
+        findViewById<TextView>(R.id.textView).text = "${user.name}, ${user.age}"
+    }
+}
+优点
+‌低耦合‌：Presenter 与 View 通过接口通信，便于单元测试。
+‌职责清晰‌：Presenter 处理业务逻辑，View 仅负责 UI。
+缺点
+‌接口膨胀‌：每个 View 需定义大量接口方法。
+‌生命周期管理复杂‌：需手动处理 Activity 重建时的 Presenter 状态。
+
+#### 3、MVVM
+// Model
+data class User(val name: String, val age: Int)
+
+// ViewModel
+class UserViewModel : ViewModel() {
+    private val _userLiveData = MutableLiveData<User>()
+    val userLiveData: LiveData<User> = _userLiveData
+
+    fun loadUser() {
+        _userLiveData.value = User("Charlie", 28)
+    }
+}
+
+// View（Activity）
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        val viewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        
+        // 观察 LiveData
+        viewModel.userLiveData.observe(this) { user ->
+            findViewById<TextView>(R.id.textView).text = "${user.name}, ${user.age}"
+        }
+        
+        viewModel.loadUser()
+    }
+}
+优点
+‌数据驱动 UI‌：LiveData 自动响应数据变化，避免手动更新 UI。
+‌生命周期安全‌：ViewModel 自动管理数据生命周期。
+‌代码简洁‌：减少胶水代码（如 MVP 中的接口方法）。
+缺点
+‌学习成本‌：需掌握 Data Binding/LiveData 等组件。
+‌过度绑定风险‌：复杂的双向绑定可能导致调试困难。
+
+#### 4、MVI
+// Model（状态封装）
+data class UserState(
+    val user: User? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+// Intent（用户操作）
+sealed class UserIntent {
+    object LoadUser : UserIntent()
+}
+
+// ViewModel
+class UserViewModel : ViewModel() {
+    private val _state = MutableStateFlow(UserState())
+    val state: StateFlow<UserState> = _state
+
+    fun processIntent(intent: UserIntent) {
+        when (intent) {
+            is UserIntent.LoadUser -> loadUser()
+        }
+    }
+
+    private fun loadUser() {
+        _state.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            try {
+                val user = User("David", 35) // 模拟网络请求
+                _state.update { it.copy(user = user, isLoading = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+}
+
+// View（Activity）
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        val viewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        
+        // 发送 Intent
+        findViewById<Button>(R.id.button).setOnClickListener {
+            viewModel.processIntent(UserIntent.LoadUser)
+        }
+        
+        // 观察状态
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect { state ->
+                    if (state.isLoading) showLoading()
+                    else state.user?.let { showUser(it) }
+                    state.error?.let { showError(it) }
+                }
+            }
+        }
+    }
+}
+优点
+‌单向数据流‌：状态变化可预测，便于调试。
+‌强类型安全‌：通过密封类（Sealed Class）明确所有可能的 Intent 和状态。
+‌适合复杂场景‌：处理多状态（加载、成功、错误）更清晰。
+缺点
+‌模板代码多‌：需定义大量状态类和 Intent 类。
+‌学习曲线陡峭‌：需熟悉响应式编程和状态管理。
+
+
+####总结：架构对比与选型建议
+架构	适用场景	核心优势	主要缺点
+‌MVC‌	简单页面、快速原型	实现简单	高耦合、难以测试
+‌MVP‌	需要高可测试性的中型项目	职责分离、易于测试	接口膨胀、生命周期管理复杂
+‌MVVM‌	数据驱动型应用（如表单、实时更新）	代码简洁、生命周期安全	双向绑定调试困难
+‌MVI‌	复杂状态管理（如多步骤表单）	状态可预测、强类型安全	模板代码多、学习成本高
+
 
 
