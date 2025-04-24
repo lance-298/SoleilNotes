@@ -126,6 +126,7 @@ Observable、ObservableField、集合类型 Observable 容器类
 
 ### 3.2ViewModel 与 Activity 生命周期对应关系
 ![image](https://github.com/user-attachments/assets/9c9d9e81-86ef-44c9-a148-ee1033cafc5a)
+![image](https://developer.android.google.cn/static/codelabs/android-lifecycles/img/1d42e8efcb42ff58_1920.png)
 一、 ViewModel 生命周期范围‌
 
 ViewModel 的生命周期从首次通过 ViewModelProvider 获取实例开始，直到关联的 Activity ‌完全销毁‌（非配置变更导致的销毁）时结束46。
