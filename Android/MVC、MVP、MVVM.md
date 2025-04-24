@@ -122,5 +122,38 @@ public class Utils {
 //4.双向绑定 @={}
 Observable、ObservableField、集合类型 Observable 容器类
 
-```
+
+
+### 3.2ViewModel 与 Activity 生命周期对应关系
+![image](https://github.com/user-attachments/assets/9c9d9e81-86ef-44c9-a148-ee1033cafc5a)
+一、 ViewModel 生命周期范围‌
+
+ViewModel 的生命周期从首次通过 ViewModelProvider 获取实例开始，直到关联的 Activity ‌完全销毁‌（非配置变更导致的销毁）时结束46。
+在 Activity 的 onCreate() 中首次获取 ViewModel 实例后，即使 Activity 因配置变更（如屏幕旋转）被销毁重建，ViewModel 仍会保留46。
+‌关键生命周期回调的对应‌
+
+‌onCreate()‌：建议在此处初始化并获取 ViewModel 实例47。
+‌onDestroy()‌：
+若 Activity 因用户主动退出（如返回键）或调用 finish() 被销毁，ViewModel 会触发 onCleared() 清理资源46。
+若 Activity 因配置变更（如屏幕旋转）被销毁，ViewModel ‌不会‌被清除，重建的 Activity 会复用原实例48。
+二、Activity 触发 ViewModel 结束的时机
+ViewModel 的结束操作（即 onCleared() 调用）由以下场景触发：
+
+‌Activity 被永久销毁‌
+用户主动退出（如按下返回键）或代码中调用 finish()，导致 Activity 进入 onDestroy() 且不再重建46。
+‌系统资源回收‌
+当系统因内存不足需要回收后台 Activity 时，若 Activity 未被标记为可重建（如未设置 configChanges），ViewModel 会被销毁8。
+‌ViewModel 的宿主范围结束‌
+若 ViewModel 关联的 Activity 是唯一宿主，且宿主被永久销毁，ViewModel 随之结束46。
+三、注意事项
+‌避免内存泄漏‌
+ViewModel ‌不应持有 Activity 的 Context‌，否则可能导致内存泄漏6。
+‌数据恢复机制‌
+在 Activity 因配置变更重建时，ViewModel 保留的数据可快速恢复 UI 状态，无需重新加载。
+‌资源释放‌
+在 onCleared() 中需手动释放资源（如取消异步任务、关闭数据库连接等）。
+
+总结
+ViewModel 的生命周期与 Activity 的解耦设计使其在配置变更时保持数据持久性，仅在 Activity 被永久销毁时释放资源。开发者需区分配置变更与永久销毁场景，合理管理数据与资源
+
 
