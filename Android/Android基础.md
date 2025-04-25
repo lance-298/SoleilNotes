@@ -667,7 +667,7 @@ private Object[] mValues;
 
 ### 35 Android 适配方案
 
-![]("https://upload-images.jianshu.io/upload_images/944365-ced9745859537daf.png?imageMogr2/auto-orient/strip|imageView2/2/w/910/format/webp")
+![](../asset/screenAapt.webp)
 
 * 布局适配
   * 布局自适应屏幕尺寸：使用相对布局（RelativeLayout），禁用绝对布局（AbsoluteLayout）
