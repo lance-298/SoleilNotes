@@ -143,16 +143,19 @@ ViewModel 的生命周期从首次通过 ViewModelProvider 获取实例开始，
 二、Activity 触发 ViewModel 结束的时机
 ViewModel 的结束操作（即 onCleared() 调用）由以下场景触发：
 
-‌Activity 被永久销毁‌
-* 用户主动退出（如按下返回键）或代码中调用 finish()，导致 Activity 进入 onDestroy() 且不再重建46。
+‌* Activity 被永久销毁‌ 
 
-‌系统资源回收‌
-* 当系统因内存不足需要回收后台 Activity 时，若 Activity 未被标记为可重建（如未设置 configChanges），ViewModel 会被销毁8。
+用户主动退出（如按下返回键）或代码中调用 finish()，导致 Activity 进入 onDestroy() 且不再重建46。
 
-‌ViewModel 的宿主范围结束‌
-* 若 ViewModel 关联的 Activity 是唯一宿主，且宿主被永久销毁，ViewModel 随之结束46。
+‌* ‌系统资源回收
+‌
+当系统因内存不足需要回收后台 Activity 时，若 Activity 未被标记为可重建（如未设置 configChanges），ViewModel 会被销毁8。
+
+‌‌* ViewModel 的宿主范围结束‌
+若 ViewModel 关联的 Activity 是唯一宿主，且宿主被永久销毁，ViewModel 随之结束46。
 
 三、注意事项
+
 ‌* 避免内存泄漏
 ‌
 ViewModel ‌不应持有 Activity 的 Context‌，否则可能导致内存泄漏6。
@@ -196,12 +199,14 @@ class MainActivity : AppCompatActivity() {
 ```
 
 优点
-*‌简单易用‌：适合小型项目或快速原型开发。
-*‌职责初步分离‌：Model 和 View 有基本隔离。
+
+*‌ 简单易用‌：适合小型项目或快速原型开发。
+*‌ 职责初步分离‌：Model 和 View 有基本隔离。
 
 缺点
-*‌高耦合‌：Activity 同时承担 View 和 Controller 职责，代码臃肿。
-‌*难以测试‌：业务逻辑与 Android 组件强绑定，无法直接单元测试。
+
+*‌ 高耦合‌：Activity 同时承担 View 和 Controller 职责，代码臃肿。
+‌* 难以测试‌：业务逻辑与 Android 组件强绑定，无法直接单元测试。
 
 #### 2、MVP
 ```kotlin
@@ -239,12 +244,14 @@ class MainActivity : AppCompatActivity(), UserView {
 ```
 
 优点
-‌*低耦合‌：Presenter 与 View 通过接口通信，便于单元测试。
-‌*职责清晰‌：Presenter 处理业务逻辑，View 仅负责 UI。
+
+‌* 低耦合‌：Presenter 与 View 通过接口通信，便于单元测试。
+‌* 职责清晰‌：Presenter 处理业务逻辑，View 仅负责 UI。
 
 缺点
-‌*接口膨胀‌：每个 View 需定义大量接口方法。
-*‌生命周期管理复杂‌：需手动处理 Activity 重建时的 Presenter 状态。
+
+‌* 接口膨胀‌：每个 View 需定义大量接口方法。
+*‌ 生命周期管理复杂‌：需手动处理 Activity 重建时的 Presenter 状态。
 
 #### 3、MVVM
 ```koltin
@@ -279,13 +286,15 @@ class MainActivity : AppCompatActivity() {
 ```
 
 优点
-*‌数据驱动 UI‌：LiveData 自动响应数据变化，避免手动更新 UI。
-‌*生命周期安全‌：ViewModel 自动管理数据生命周期。
-‌*代码简洁‌：减少胶水代码（如 MVP 中的接口方法）。
+
+*‌ 数据驱动 UI‌：LiveData 自动响应数据变化，避免手动更新 UI。
+‌* 生命周期安全‌：ViewModel 自动管理数据生命周期。
+‌* 代码简洁‌：减少胶水代码（如 MVP 中的接口方法）。
 
 缺点
-‌*学习成本‌：需掌握 Data Binding/LiveData 等组件。
-‌*过度绑定风险‌：复杂的双向绑定可能导致调试困难。
+
+‌* 学习成本‌：需掌握 Data Binding/LiveData 等组件。
+‌* 过度绑定风险‌：复杂的双向绑定可能导致调试困难。
 
 #### 4、MVI
 ```kotlin
@@ -352,13 +361,15 @@ class MainActivity : AppCompatActivity() {
 ```
 
 优点
-‌*单向数据流‌：状态变化可预测，便于调试。
-‌*强类型安全‌：通过密封类（Sealed Class）明确所有可能的 Intent 和状态。
-‌*适合复杂场景‌：处理多状态（加载、成功、错误）更清晰。
+
+‌* 单向数据流‌：状态变化可预测，便于调试。
+‌* 强类型安全‌：通过密封类（Sealed Class）明确所有可能的 Intent 和状态。
+‌* 适合复杂场景‌：处理多状态（加载、成功、错误）更清晰。
 
 缺点
-‌*模板代码多‌：需定义大量状态类和 Intent 类。
-‌*学习曲线陡峭‌：需熟悉响应式编程和状态管理。
+
+‌* 模板代码多‌：需定义大量状态类和 Intent 类。
+‌* 学习曲线陡峭‌：需熟悉响应式编程和状态管理。
 
 
 #### 总结：架构对比与选型建议
