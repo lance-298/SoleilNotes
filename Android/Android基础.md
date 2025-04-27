@@ -85,286 +85,330 @@ B.onStop() → B.onDestroy()
 * AI 答案
   ``` java
   Activity与Fragment通信方案
-a. 接口回调
-b. ViewModel + LiveData
-c. Fragment Result API
-d. EventBus/RxJava
-e. 直接方法调用
-f. Intent/Arguments
+    a. 接口回调
+    b. ViewModel + LiveData
+    c. Fragment Result API
+    d. EventBus/RxJava
+    e. 直接方法调用
+    f. Intent/Arguments
 
-Fragment之间通信方案
-a. 共享ViewModel
-b. Fragment Result API
-c. 接口回调（通过Activity）
-d. EventBus/RxJava
-e. 父Fragment中转
-f. Navigation Safe Args‌
-
-
-  Activity 与 Fragment 通信方案
-以下列举 6 种常见方式，涵盖不同场景需求：
-
-1. 接口回调（推荐）‌
-步骤‌：
-Fragment 定义接口，Activity 实现该接口。
-在 Fragment 的 onAttach() 中获取接口实例。
-通过接口方法传递数据。
-kotlin
-Copy Code
-// Fragment 定义接口
-class MyFragment : Fragment() {
-    interface OnDataListener {
-        fun onDataReceived(data: String)
+    Fragment之间通信方案
+    a. 共享ViewModel
+    b. Fragment Result API
+    c. 接口回调（通过Activity）
+    d. EventBus/RxJava
+    e. 父Fragment中转
+    f. Navigation Safe Args‌
+    
+    
+      Activity 与 Fragment 通信方案
+    以下列举 6 种常见方式，涵盖不同场景需求：
+    
+    1. 接口回调（推荐）‌
+    步骤‌：
+    Fragment 定义接口，Activity 实现该接口。
+    在 Fragment 的 onAttach() 中获取接口实例。
+    通过接口方法传递数据。
+    kotlin
+    Copy Code
+    // Fragment 定义接口
+    class MyFragment : Fragment() {
+        interface OnDataListener {
+            fun onDataReceived(data: String)
+        }
+        private var listener: OnDataListener? = null
+    
+        override fun onAttach(context: Context) {
+            super.onAttach(context)
+            listener = context as? OnDataListener // 类型安全检查
+        }
+    
+        private fun sendDataToActivity() {
+            listener?.onDataReceived("Hello Activity!")
+        }
     }
-    private var listener: OnDataListener? = null
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = context as? OnDataListener // 类型安全检查
-    }
-
-    private fun sendDataToActivity() {
-        listener?.onDataReceived("Hello Activity!")
-    }
-}
-
-// Activity 实现接口
-class MainActivity : AppCompatActivity(), MyFragment.OnDataListener {
-    override fun onDataReceived(data: String) {
-        // 处理数据
-    }
-}
-
-
-优点‌：类型安全，低耦合。
-缺点‌：需手动管理接口生命周期。
-
-2. ViewModel + LiveData（推荐）‌
-适用场景‌：需要共享数据的复杂交互。
-kotlin
-Copy Code
-// 共享 ViewModel
-class SharedViewModel : ViewModel() {
-    val data = MutableLiveData<String>()
-}
-
-// Activity 中初始化
-class MainActivity : AppCompatActivity() {
-    private val viewModel: SharedViewModel by viewModels()
-    // 更新数据
-    fun updateData() {
-        viewModel.data.value = "Data from Activity"
-    }
-}
-
-// Fragment 中观察数据
-class MyFragment : Fragment() {
-    private val viewModel: SharedViewModel by activityViewModels()
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.data.observe(viewLifecycleOwner) { data ->
+    
+    // Activity 实现接口
+    class MainActivity : AppCompatActivity(), MyFragment.OnDataListener {
+        override fun onDataReceived(data: String) {
             // 处理数据
         }
     }
-}
-
-
-优点‌：生命周期感知，数据持久化。
-缺点‌：需引入 Android 架构组件。
-
-3. Fragment Result API‌
-适用场景‌：单向数据传递（如返回结果）。
-kotlin
-Copy Code
-// Fragment 发送数据
-button.setOnClickListener {
-    val result = Bundle().apply { putString("key", "Result from Fragment") }
-    parentFragmentManager.setFragmentResult("requestKey", result)
-}
-
-// Activity 接收数据
-supportFragmentManager.setFragmentResultListener("requestKey", this) { key, bundle ->
-    val result = bundle.getString("key")
-    // 处理结果
-}
-
-
-优点‌：无需接口定义，适合简单场景。
-缺点‌：仅支持单向通信。
-
-4. EventBus（第三方库）‌
-步骤‌：通过全局事件总线通信。
-kotlin
-Copy Code
-// 发送事件（Fragment 或 Activity）
-EventBus.getDefault().post(MessageEvent("Hello!"))
-
-// 订阅事件（Activity 中）
-@Subscribe(threadMode = ThreadMode.MAIN)
-fun onMessageEvent(event: MessageEvent) {
-    // 处理事件
-}
-
-override fun onStart() {
-    super.onStart()
-    EventBus.getDefault().register(this)
-}
-
-override fun onStop() {
-    super.onStop()
-    EventBus.getDefault().unregister(this)
-}
-
-
-优点‌：跨组件通信灵活。
-缺点‌：需管理订阅/反注册，可能内存泄漏。
-
-5. 直接方法调用（不推荐）‌
-步骤‌：Activity 通过 Fragment 实例直接调用方法。
-kotlin
-Copy Code
-// Activity 中
-val fragment = supportFragmentManager.findFragmentById(R.id.fragment) as MyFragment
-fragment.updateData("Direct call")
-
-// Fragment 中定义方法
-fun updateData(data: String) {
-    // 更新 UI
-}
-
-
-优点‌：实现简单。
-缺点‌：高耦合，Fragment 无法复用。
-
-6. 通过 Intent/Arguments 传参‌
-适用场景‌：初始化时传递数据。
-kotlin
-Copy Code
-// Activity 传递数据给 Fragment
-val fragment = MyFragment().apply {
-    arguments = Bundle().apply { putString("key", "Initial Data") }
-}
-
-// Fragment 中获取数据
-override fun onCreate(savedInstanceState: Bundle?) {
-    val data = arguments?.getString("key")
-}
-
-
-优点‌：适合静态数据初始化。
-缺点‌：无法实时更新数据。
-
-Fragment 与 Fragment 通信方案‌
-1. 共享 ViewModel（推荐）‌
-同一 Activity 作用域‌：
-kotlin
-Copy Code
-// FragmentA 发送数据
-viewModel.data.value = "Data from FragmentA"
-
-// FragmentB 接收数据
-viewModel.data.observe(viewLifecycleOwner) { data ->
-    // 更新 UI
-}
-
-
-优点‌：数据驱动，实时同步。
-
-2. Fragment Result API‌
-步骤‌：通过父 FragmentManager 传递结果。
-kotlin
-Copy Code
-// FragmentA 发送数据
-setFragmentResult("requestKey", bundleOf("data" to "Hello FragmentB"))
-
-// FragmentB 接收数据
-parentFragmentManager.setFragmentResultListener("requestKey", viewLifecycleOwner) { key, bundle ->
-    val data = bundle.getString("data")
-}
-
-3. 接口回调（通过 Activity 中转）‌
-步骤‌：
-FragmentA 通过接口通知 Activity。
-Activity 调用 FragmentB 的方法传递数据。
-kotlin
-Copy Code
-// FragmentA 触发
-listener?.onDataPass("Data to FragmentB")
-
-// Activity 中转
-override fun onDataPass(data: String) {
-    val fragmentB = supportFragmentManager.findFragmentById(R.id.fragmentB) as? FragmentB
-    fragmentB?.receiveData(data)
-}
-
-4. EventBus/RxJava‌
-全局事件总线‌：
-kotlin
-Copy Code
-// FragmentA 发布事件
-EventBus.getDefault().post(MessageEvent("Event Data"))
-
-// FragmentB 订阅事件
-@Subscribe
-fun handleEvent(event: MessageEvent) {
-    // 处理事件
-}
-
-5. 父 Fragment 中转‌
-适用场景‌：嵌套 Fragment 的通信。
-kotlin
-Copy Code
-// 子 FragmentA 通知父 Fragment
-(parentFragment as? ParentFragment)?.onChildEvent("Data")
-
-// 父 Fragment 传递数据给子 FragmentB
-childFragmentManager.fragments.forEach {
-    if (it is FragmentB) it.receiveData(data)
-}
-
-6. Navigation Safe Args‌
-步骤‌：通过导航组件安全传参。
-kotlin
-Copy Code
-// 定义参数（nav_graph.xml）
-<argument
-    android:name="data"
-    app:argType="string" />
-
-// FragmentA 发送
-val directions = FragmentADirections.actionToFragmentB("Hello")
-findNavController().navigate(directions)
-
-// FragmentB 接收
-val args: FragmentBArgs by navArgs()
-val data = args.data
-
-
-优点‌：类型安全，与导航组件深度集成。
-
-总结‌
-方案‌	‌适用场景‌	‌优点‌	‌缺点‌
-接口回调‌	简单单向通信	类型安全，低耦合	需手动管理接口
-ViewModel + LiveData‌	复杂数据共享	生命周期感知，数据驱动	需引入架构组件
-Fragment Result API‌	单向结果返回	无需接口，简单易用	仅支持简单数据
-EventBus‌	跨组件/全局通信	高度灵活	可能内存泄漏，需依赖库
-Navigation Safe Args‌	导航传参	类型安全，集成导航	依赖 Navigation 组件
-
-推荐组合‌：
-
-Activity ↔ Fragment‌：优先使用 ‌ViewModel + LiveData‌ 或 ‌接口回调‌。
-Fragment ↔ Fragment‌：优先使用 ‌共享 ViewModel‌ 或 ‌Navigation Safe Args‌。
-简单场景‌：使用 ‌Fragment Result API‌ 或 ‌Arguments‌。
-
-根据项目需求选择合适方案，避免过度设计或耦合度过高。
+    
+    
+    优点‌：类型安全，低耦合。
+    缺点‌：需手动管理接口生命周期。
+    
+    2. ViewModel + LiveData（推荐）‌
+    适用场景‌：需要共享数据的复杂交互。
+    kotlin
+    Copy Code
+    // 共享 ViewModel
+    class SharedViewModel : ViewModel() {
+        val data = MutableLiveData<String>()
+    }
+    
+    // Activity 中初始化
+    class MainActivity : AppCompatActivity() {
+        private val viewModel: SharedViewModel by viewModels()
+        // 更新数据
+        fun updateData() {
+            viewModel.data.value = "Data from Activity"
+        }
+    }
+    
+    // Fragment 中观察数据
+    class MyFragment : Fragment() {
+        private val viewModel: SharedViewModel by activityViewModels()
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            viewModel.data.observe(viewLifecycleOwner) { data ->
+                // 处理数据
+            }
+        }
+    }
+    
+    
+    优点‌：生命周期感知，数据持久化。
+    缺点‌：需引入 Android 架构组件。
+    
+    3. Fragment Result API‌
+    适用场景‌：单向数据传递（如返回结果）。
+    kotlin
+    Copy Code
+    // Fragment 发送数据
+    button.setOnClickListener {
+        val result = Bundle().apply { putString("key", "Result from Fragment") }
+        parentFragmentManager.setFragmentResult("requestKey", result)
+    }
+    
+    // Activity 接收数据
+    supportFragmentManager.setFragmentResultListener("requestKey", this) { key, bundle ->
+        val result = bundle.getString("key")
+        // 处理结果
+    }
+    
+    
+    优点‌：无需接口定义，适合简单场景。
+    缺点‌：仅支持单向通信。
+    
+    4. EventBus（第三方库）‌
+    步骤‌：通过全局事件总线通信。
+    kotlin
+    Copy Code
+    // 发送事件（Fragment 或 Activity）
+    EventBus.getDefault().post(MessageEvent("Hello!"))
+    
+    // 订阅事件（Activity 中）
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: MessageEvent) {
+        // 处理事件
+    }
+    
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+    
+    
+    优点‌：跨组件通信灵活。
+    缺点‌：需管理订阅/反注册，可能内存泄漏。
+    
+    5. 直接方法调用（不推荐）‌
+    步骤‌：Activity 通过 Fragment 实例直接调用方法。
+    kotlin
+    Copy Code
+    // Activity 中
+    val fragment = supportFragmentManager.findFragmentById(R.id.fragment) as MyFragment
+    fragment.updateData("Direct call")
+    
+    // Fragment 中定义方法
+    fun updateData(data: String) {
+        // 更新 UI
+    }
+    
+    
+    优点‌：实现简单。
+    缺点‌：高耦合，Fragment 无法复用。
+    
+    6. 通过 Intent/Arguments 传参‌
+    适用场景‌：初始化时传递数据。
+    kotlin
+    Copy Code
+    // Activity 传递数据给 Fragment
+    val fragment = MyFragment().apply {
+        arguments = Bundle().apply { putString("key", "Initial Data") }
+    }
+    
+    // Fragment 中获取数据
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val data = arguments?.getString("key")
+    }
+    
+    
+    优点‌：适合静态数据初始化。
+    缺点‌：无法实时更新数据。
+    
+    Fragment 与 Fragment 通信方案‌
+    1. 共享 ViewModel（推荐）‌
+    同一 Activity 作用域‌：
+    kotlin
+    Copy Code
+    // FragmentA 发送数据
+    viewModel.data.value = "Data from FragmentA"
+    
+    // FragmentB 接收数据
+    viewModel.data.observe(viewLifecycleOwner) { data ->
+        // 更新 UI
+    }
+    
+    
+    优点‌：数据驱动，实时同步。
+    
+    2. Fragment Result API‌
+    步骤‌：通过父 FragmentManager 传递结果。
+    kotlin
+    Copy Code
+    // FragmentA 发送数据
+    setFragmentResult("requestKey", bundleOf("data" to "Hello FragmentB"))
+    
+    // FragmentB 接收数据
+    parentFragmentManager.setFragmentResultListener("requestKey", viewLifecycleOwner) { key, bundle ->
+        val data = bundle.getString("data")
+    }
+    
+    3. 接口回调（通过 Activity 中转）‌
+    步骤‌：
+    FragmentA 通过接口通知 Activity。
+    Activity 调用 FragmentB 的方法传递数据。
+    kotlin
+    Copy Code
+    // FragmentA 触发
+    listener?.onDataPass("Data to FragmentB")
+    
+    // Activity 中转
+    override fun onDataPass(data: String) {
+        val fragmentB = supportFragmentManager.findFragmentById(R.id.fragmentB) as? FragmentB
+        fragmentB?.receiveData(data)
+    }
+    
+    4. EventBus/RxJava‌
+    全局事件总线‌：
+    kotlin
+    Copy Code
+    // FragmentA 发布事件
+    EventBus.getDefault().post(MessageEvent("Event Data"))
+    
+    // FragmentB 订阅事件
+    @Subscribe
+    fun handleEvent(event: MessageEvent) {
+        // 处理事件
+    }
+    
+    5. 父 Fragment 中转‌
+    适用场景‌：嵌套 Fragment 的通信。
+    kotlin
+    Copy Code
+    // 子 FragmentA 通知父 Fragment
+    (parentFragment as? ParentFragment)?.onChildEvent("Data")
+    
+    // 父 Fragment 传递数据给子 FragmentB
+    childFragmentManager.fragments.forEach {
+        if (it is FragmentB) it.receiveData(data)
+    }
+    
+    6. Navigation Safe Args‌
+    步骤‌：通过导航组件安全传参。
+    kotlin
+    Copy Code
+    // 定义参数（nav_graph.xml）
+    <argument
+        android:name="data"
+        app:argType="string" />
+    
+    // FragmentA 发送
+    val directions = FragmentADirections.actionToFragmentB("Hello")
+    findNavController().navigate(directions)
+    
+    // FragmentB 接收
+    val args: FragmentBArgs by navArgs()
+    val data = args.data
+    
+    
+    优点‌：类型安全，与导航组件深度集成。
+    
+    总结‌
+    方案‌	‌适用场景‌	‌优点‌	‌缺点‌
+    接口回调‌	简单单向通信	类型安全，低耦合	需手动管理接口
+    ViewModel + LiveData‌	复杂数据共享	生命周期感知，数据驱动	需引入架构组件
+    Fragment Result API‌	单向结果返回	无需接口，简单易用	仅支持简单数据
+    EventBus‌	跨组件/全局通信	高度灵活	可能内存泄漏，需依赖库
+    Navigation Safe Args‌	导航传参	类型安全，集成导航	依赖 Navigation 组件
+    
+    推荐组合‌：
+    
+    Activity ↔ Fragment‌：优先使用 ‌ViewModel + LiveData‌ 或 ‌接口回调‌。
+    Fragment ↔ Fragment‌：优先使用 ‌共享 ViewModel‌ 或 ‌Navigation Safe Args‌。
+    简单场景‌：使用 ‌Fragment Result API‌ 或 ‌Arguments‌。
+    
+    根据项目需求选择合适方案，避免过度设计或耦合度过高。
   ```
 
-### 6 onSaveInstanceState()方法的作用 ? 何时会被调用？
+### 6 onSaveInstanceState()、onRestoreInstanceState()方法的作用 ? 何时会被调用？
 
 系统**配置发生改变**时导致 Activity 被杀死并重新创建、资源内存不足导致优先级低的 Activity 被杀死。
 
 系统会调用 onSaveInstanceState 来保存当前 Activity 的状态，此方法调用在onStop之前，与onPause 没有既定的时序关系；
 
 当Activity被重建后，系统会调用 **onRestoreInstanceState**，并且把 onSaveInstanceState 方法所保存的 Bundle 对象同时传参给 onRestoreInstanceState 和 onCreate()，因此可以通过这两个方法判断Activity 是否被重建 ，调用在 onStart 之后；
+
+
+
+原文链接：https://blog.csdn.net/m0_61499908/article/details/144100725
+
+####  1、onRestoreInstanceState()何时被调用？
+
+当某个activity变得"容易"被系统销毁时，该activity的onSaveInstanceState()就会被执行，除非该activity是被用户主动销毁的，例如当用户按BACK键的时候。
+* (1)、当用户按下HOME键时。
+    * 这是显而易见的，系统不知道你按下HOME后要运行多少其他的程序，自然也不知道activity A是否会被销毁，因此系统会调用onSaveInstanceState()，让用户有机会保存某些非永久性的数据。以下几种情况的分析都遵循该原则
+* (2)、长按HOME键，选择运行其他的程序时。
+* (3)、按下电源按键（关闭屏幕显示）时。
+* (4)、从activity A中启动一个新的activity时。
+* (5)、屏幕方向切换时，例如从竖屏切换到横屏时。
+在屏幕切换之前，系统会销毁activity A，在屏幕切换之后系统又会自动地创建activity A，所以onSaveInstanceState()一定会被执行，且也一定会执行onRestoreInstanceState()。
+
+总而言之，onSaveInstanceState()的调用遵循一个重要原则，即当系统存在“未经你许可”时销毁了我们的activity的可能时，则onSaveInstanceState()会被系统调用，这是系统的责任，
+因为它必须要提供一个机会让你保存你的数据（当然你不保存那就随便你了）。如果调用，调用将发生在onPause()或onStop()方法之前。（虽然测试时发现多数在onPause()前）
+
+####  2、onRestoreInstanceState()什么时候调用？
+onRestoreInstanceState()被调用的前提是，activity A“确实”被系统销毁了，而如果仅仅是停留在有这种可能性的情况下，则该方法不会被调用，
+例如，当正在显示activity A的时候，用户按下HOME键回到主界面，然后用户紧接着又返回到activity A，这种情况下activity A一般不会因为内存的原因被系统销毁，
+故activity A的onRestoreInstanceState方法不会被执行 此也说明上二者，大多数情况下不成对被使用。
+
+onRestoreInstanceState()在onStart() 和 onPostCreate(Bundle)之间调用。
+
+####  3、onSaveInstanceState()方法的默认实现
+如果我们没有覆写onSaveInstanceState()方法, 此方法的默认实现会自动保存activity中的某些状态数据, 比如activity中各种UI控件的状态。
+android应用框架中定义的几乎所有UI控件都恰当的实现了onSaveInstanceState()方法,因此当activity被摧毁和重建时, 这些UI控件会自动保存和恢复状态数据. 
+比如EditText控件会自动保存和恢复输入的数据,而CheckBox控件会自动保存和恢复选中状态.开发者只需要为这些控件指定一个唯一的ID(通过设置android:id属性即可),
+剩余的事情就可以自动完成了.如果没有为控件指定ID, 则这个控件就不会进行自动的数据保存和恢复操作。
+
+由上所述, 如果我们需要覆写onSaveInstanceState()方法, 一般会在第一行代码中调用该方法的默认实现:super.onSaveInstanceState(outState)
+
+####  4、是否需要重写onSaveInstanceState()方法
+既然该方法的默认实现可以自动的保存UI控件的状态数据, 那什么时候需要覆写该方法呢?
+
+如果需要保存额外的数据时, 就需要覆写onSaveInstanceState()方法。大家需要注意的是：onSaveInstanceState()方法只适合保存瞬态数据, 比如UI控件的状态, 成员变量的值等，
+而不应该用来保存持久化数据，持久化数据应该当用户离开当前的 activity时，在 onPause() 中保存（比如将数据保存到数据库或文件中）。
+说到这里，还要说一点的就是在onPause()中不适合用来保存比较费时的数据，所以这点要理解。
+
+由于onSaveInstanceState()方法方法不一定会被调用, 因此不适合在该方法中保存持久化数据, 例如向数据库中插入记录等. 
+保存持久化数据的操作应该放在onPause()中。若是永久性值，则在onPause()中保存；若大量，则另开线程吧，别阻塞UI线程。
+
 
 ###  7 Activity的四种启动模式、应用场景 ？
 
