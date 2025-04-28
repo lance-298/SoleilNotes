@@ -573,7 +573,7 @@ AsyncTask 里面线程池是一个核心线程数为 CPU + 1，最大线程数�
 
 ### 14 Bundle 传递对象为什么需要序列化？
 
-* 1. Bundle 支持传递的对象类型‌
+1. Bundle 支持传递的对象类型‌
   *  基本类型‌：
     *  int、float、boolean、byte、long、double 及其数组形式47。
   *  字符串‌：
@@ -583,13 +583,13 @@ AsyncTask 里面线程池是一个核心线程数为 CPU + 1，最大线程数�
     *  实现 Parcelable 接口‌：Android 专用高效序列化方案，推荐优先使用45。
     *  其他特殊类型‌：Bundle 自身、Size、SizeF 等系统预定义 Parcelable 对象
 
-* 2. Bundle 大小限制‌
+2. Bundle 大小限制‌
   *  Binder 事务限制‌：
     *  通过 Intent 跨进程传递时，Bundle 总大小通常不超过 ‌1MB‌（不同设备/系统版本可能有差异），超出会抛出 TransactionTooLargeException12。
   *  单次键值对限制‌：
     *  单个键值对（如一个 Parcelable 对象）建议不超过 ‌50KB‌，避免因内存碎片导致隐式崩溃
 
-* ‌3. 注意事项与优化策略‌
+‌3. 注意事项与优化策略‌
   *  (1) 控制数据量‌
     *  ‌避免冗余传递‌：仅传递必要字段，而非完整对象16。
     *  替代方案‌：大文件或数据使用全局单例、数据库、SharedPreferences 共享15。 
