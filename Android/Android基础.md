@@ -1,4 +1,5 @@
 ### 1 Activity 生命周期 
+![](../asset/lifecycle.png)
 
 * onCreate()：正在被创建，常用来**初始化工作**，比如调用 setContentView 加载界面布局资源，初始化 Activity 所需数据等；
 
