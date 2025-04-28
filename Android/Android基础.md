@@ -486,8 +486,8 @@ Activity（控制者）
 * 优化布局和绘制性能使用 ViewStub 或延迟加载减少布局复杂度
 
 详情，参考链接：
-https://blog.csdn.net/abc6368765/article/details/127220609
-
+https://blog.csdn.net/u010345983/article/details/136376704 
+https://blog.csdn.net/abc6368765/article/details/127220609 
 https://blog.csdn.net/wudexiaoade2008/article/details/143923824
 
 ANR的类型
@@ -509,6 +509,12 @@ ANR的类型
   * （4）ContentProviderTimeout
     * ContentProvider 在10S内没有处理完成发生ANR。
     * logcat日志关键字：timeout publishing content providers
+   
+  * ANR 分析步骤
+    * 1.首先，需要定位ANR发生的时间点，从event-log查找“am_ANR”关键字可以定位。
+    * 2.其次，从main-log（system-log）中查找“ANR in”关键字确认ANR具体的信息。
+    * 3.信息包含：ANR发生的进程名、进程号。ANR发生的原因。ANR发生的时候，当时的进程cpu占用情况，同时具体进程占用的上层和kernel层资源情况。ANR发生的时候cpu的负载情况。IOWAIT情况以及总的CPU使用情况。
+    * 4.进一步查看trace-log，了解进程的堆栈信息来判断ANR的原因。(一定要结合trace log 看，否则像一些死锁，进程堆栈都会发现不了)
 
 ### 12 AsyncTask 的缺陷和问题，说说他的原理？
 
