@@ -575,30 +575,30 @@ AsyncTask 里面线程池是一个核心线程数为 CPU + 1，最大线程数�
 
 * 1. Bundle 支持传递的对象类型‌
   *  基本类型‌：
-    * int、float、boolean、byte、long、double 及其数组形式47。
-  * 字符串‌：
-    * String 及其数组 String[]46。
-  * ‌对象类型‌：
-    * 实现 Serializable 接口‌：适用于简单的跨进程序列化，但效率较低45。
-    * 实现 Parcelable 接口‌：Android 专用高效序列化方案，推荐优先使用45。
-    * ‌其他特殊类型‌：Bundle 自身、Size、SizeF 等系统预定义 Parcelable 对象
+    *  int、float、boolean、byte、long、double 及其数组形式47。
+  *  字符串‌：
+    *  String 及其数组 String[]46。
+  *  对象类型‌：
+    *  实现 Serializable 接口‌：适用于简单的跨进程序列化，但效率较低45。
+    *  实现 Parcelable 接口‌：Android 专用高效序列化方案，推荐优先使用45。
+    *  其他特殊类型‌：Bundle 自身、Size、SizeF 等系统预定义 Parcelable 对象
 
 * 2. Bundle 大小限制‌
   *  Binder 事务限制‌：
-    * 通过 Intent 跨进程传递时，Bundle 总大小通常不超过 ‌1MB‌（不同设备/系统版本可能有差异），超出会抛出 TransactionTooLargeException12。
+    *  通过 Intent 跨进程传递时，Bundle 总大小通常不超过 ‌1MB‌（不同设备/系统版本可能有差异），超出会抛出 TransactionTooLargeException12。
   *  单次键值对限制‌：
-    * 单个键值对（如一个 Parcelable 对象）建议不超过 ‌50KB‌，避免因内存碎片导致隐式崩溃
+    *  单个键值对（如一个 Parcelable 对象）建议不超过 ‌50KB‌，避免因内存碎片导致隐式崩溃
 
 * ‌3. 注意事项与优化策略‌
   *  (1) 控制数据量‌
-    * ‌避免冗余传递‌：仅传递必要字段，而非完整对象16。
-    * 替代方案‌：大文件或数据使用全局单例、数据库、SharedPreferences 共享15。 
+    *  ‌避免冗余传递‌：仅传递必要字段，而非完整对象16。
+    *  替代方案‌：大文件或数据使用全局单例、数据库、SharedPreferences 共享15。 
   *  (2) 序列化方式选择‌
-    * 优先使用 Parcelable‌：相比 Serializable，性能提升 10 倍以上 
-    * 避免嵌套复杂对象‌：深度序列化可能触发递归性能问题。
-‌  * ‌(3) 跨进程限制处理‌
-    * 分页传输‌：将大数据拆分为多个 Bundle 分批次传递。
-    * 使用 ContentProvider‌：通过 URI 共享数据，规避 Binder 限制
+    *  优先使用 Parcelable‌：相比 Serializable，性能提升 10 倍以上 
+    *  避免嵌套复杂对象‌：深度序列化可能触发递归性能问题。
+  *  (3) 跨进程限制处理‌
+    *  分页传输‌：将大数据拆分为多个 Bundle 分批次传递。
+    *  使用 ContentProvider‌：通过 URI 共享数据，规避 Binder 限制
 
 为 bundle 传递数据时，只支持基本数据类型，所以在传递数据时，要将对象序列化转化成可以存储或者可以传输的本质状态，即**字节流**。序列化后的对象可以在网络，页面之间传递，也可以存储到本地。
 
