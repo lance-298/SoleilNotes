@@ -28,43 +28,43 @@
 ### 3 ActivityA 跳转 ActivityB 然后 B 按 back 返回 A，各自的生命周期顺序，A 与 B 均不透明？如果B是透明主题的又或是个DialogActivity 呢？
 
 ```java
-‌场景一：ActivityB 为普通不透明主题（默认样式）‌
-‌跳转顺序（A → B）‌：
-A.onPause()
-B.onCreate() → B.onStart() → B.onResume()
-A.onStop()（A 完全不可见）
-‌返回顺序（B → A）‌：
-B.onPause()
-A.onRestart() → A.onStart() → A.onResume()
-B.onStop() → B.onDestroy()
-‌特点‌：
-‌A 完全不可见‌：B 覆盖整个屏幕，A 进入 onStop() 状态。
-‌资源释放‌：A 在 onStop() 中可释放资源（如摄像头、传感器占用）。
+  ‌场景一：ActivityB 为普通不透明主题（默认样式）‌
+     ‌跳转顺序（A → B）‌：
+     A.onPause()
+     B.onCreate() → B.onStart() → B.onResume()
+     A.onStop()（A 完全不可见）
+     ‌返回顺序（B → A）‌：
+     B.onPause()
+     A.onRestart() → A.onStart() → A.onResume()
+     B.onStop() → B.onDestroy()
+     ‌特点‌：
+     ‌A 完全不可见‌：B 覆盖整个屏幕，A 进入 onStop() 状态。
+     ‌资源释放‌：A 在 onStop() 中可释放资源（如摄像头、传感器占用）。
 
 
-‌场景二：ActivityB 为透明主题（如 Theme.Translucent）‌
-‌跳转顺序（A → B）‌：
-A.onPause()
-B.onCreate() → B.onStart() → B.onResume()
-‌返回顺序（B → A）‌：
-B.onPause()
-A.onResume()（A 重新获得焦点）
-B.onStop() → B.onDestroy()
-‌关键区别‌：
-‌A 仅暂停但可见‌：B 为透明或半透明，A 停留在 onPause() 状态但未被完全遮挡。
-‌无 onStop() 触发‌：A 始终可见，不会进入 onStop()。
+  ‌场景二：ActivityB 为透明主题（如 Theme.Translucent）‌
+    ‌跳转顺序（A → B）‌：
+    A.onPause()
+    B.onCreate() → B.onStart() → B.onResume()
+    ‌返回顺序（B → A）‌：
+    B.onPause()
+    A.onResume()（A 重新获得焦点）
+    B.onStop() → B.onDestroy()
+    ‌关键区别‌：
+    ‌A 仅暂停但可见‌：B 为透明或半透明，A 停留在 onPause() 状态但未被完全遮挡。
+    ‌无 onStop() 触发‌：A 始终可见，不会进入 onStop()。
 
-场景三：ActivityB 为 DialogActivity（对话框样式）‌
-‌跳转顺序（A → B）‌：
-A.onPause()
-B.onCreate() → B.onStart() → B.onResume()
-‌返回顺序（B → A）‌：
-B.onPause()
-A.onResume()
-B.onStop() → B.onDestroy()
-‌行为特点‌：
-‌与透明主题一致‌：对话框样式的 Activity 不会完全覆盖底层 Activity，A 停留在 onPause() 状态。
-‌窗口层级差异‌：DialogActivity 作为悬浮窗口存在，不占用全屏空间。  
+  场景三：ActivityB 为 DialogActivity（对话框样式）‌
+    ‌跳转顺序（A → B）‌：
+    A.onPause()
+    B.onCreate() → B.onStart() → B.onResume()
+    ‌返回顺序（B → A）‌：
+    B.onPause()
+    A.onResume()
+    B.onStop() → B.onDestroy()
+    ‌行为特点‌：
+    ‌与透明主题一致‌：对话框样式的 Activity 不会完全覆盖底层 Activity，A 停留在 onPause() 状态。
+    ‌窗口层级差异‌：DialogActivity 作为悬浮窗口存在，不占用全屏空间。  
 ```
 
 ### 4 Android中进程的优先级？
