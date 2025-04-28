@@ -702,6 +702,18 @@ JSON 的全称是 JavaScript Object Notation，也就是 JavaScript 对象表示
 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 ```
 
+1. 底层实现差异‌
+* ‌Activity 的 startActivity‌：
+继承自 ContextThemeWrapper，直接实现任务栈管理逻辑，默认将新 Activity 添加到当前栈47。
+* ‌Context 的 startActivity‌：
+通用实现（如 ContextWrapper 中的 mBase.startActivity），未绑定具体任务栈，需开发者显式指定(Intent.FLAG_ACTIVITY_NEW_TASK)。
+
+3. 典型问题与规避方案‌
+‌* 未设置 FLAG_ACTIVITY_NEW_TASK‌：
+在非 Activity 的 Context 中启动 Activity 时，若未添加该 Flag，系统因找不到任务栈而崩溃23。
+* ‌跨进程启动优化‌：
+建议优先通过 Activity 或 Fragment 触发页面跳转，避免因任务栈管理不当引发异常
+
 ### 20 怎么在Service中创建Dialog对话框？
 
 ```java
