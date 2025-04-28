@@ -483,10 +483,36 @@ Activity（控制者）
 * 使用 AsyncTask、Thread、HandlerThread 等处理耗时操作
 * 使用 Handler 线程之间的通信，而不是使用 Object.wait() 或者 Thread.sleep() 来阻塞主线程
 * onCreate 和 onResume 回调中尽量避免耗时的代码
+* 优化布局和绘制性能使用 ViewStub 或延迟加载减少布局复杂度
+
+详情，参考链接：
+https://blog.csdn.net/abc6368765/article/details/127220609
+
+https://blog.csdn.net/wudexiaoade2008/article/details/143923824
+
+ANR的类型
+
+  * （1）KeyDispatchTimeout（常见）
+    * input事件在5S内没有处理完成发生了ANR。
+    * logcat日志关键字：Input event dispatching timed out
+
+  * （2）BroadcastTimeout
+    * 前台Broadcast：onReceiver在10S内没有处理完成发生ANR。
+    * 后台Broadcast：onReceiver在60s内没有处理完成发生ANR。
+    * logcat日志关键字：Timeout of broadcast BroadcastRecord
+
+  * （3）ServiceTimeout
+    * 前台Service：onCreate，onStart，onBind等生命周期在20s内没有处理完成发生ANR。
+    * 后台Service：onCreate，onStart，onBind等生命周期在200s内没有处理完成发生ANR
+    * logcat日志关键字：Timeout executing service
+
+  * （4）ContentProviderTimeout
+    * ContentProvider 在10S内没有处理完成发生ANR。
+    * logcat日志关键字：timeout publishing content providers
 
 ### 12 AsyncTask 的缺陷和问题，说说他的原理？
 
-详情，参考链接：https://blog.csdn.net/github_27263697/article/details/144420406
+详情，参考链接：https://blog.csdn.net/github_27263697/article/details/144420406 
 
 AsyncTask 是一种**轻量级的异步任务类**，可以在线程池中执行后台任务，然后把执行的进度和最终结果传递给主线程并主线程中更新 UI，通过 AsyncTask 可以更加方便执行后台任务以及在主线程中访问 UI，但是 AsyncTask 并不适合进行特别耗时的后台任务，对于特别耗时的任务来说，建议使用线程池。
 
