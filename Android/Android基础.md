@@ -437,6 +437,22 @@ window （实现类是 PhoneWindow ）相当于一个容器，里面盛放着很
 
 一个 Activity 对应一个 Window，Activity 本身是没办法处理显示什么控件（view）的，是通过 PhoneWindow 进行显示的。
 
+*  架构设计意义‌
+ *  ‌职责分离‌：
+  *  Activity 专注业务逻辑，Window 处理显示规则，View 实现具体渲染，降低耦合度38。
+‌ *  层级管理‌：
+  *  Window 分为应用窗口（Activity）、子窗口（Dialog）和系统窗口（Toast），层级决定显示优先级58。
+‌ *  渲染优化‌：
+  *  ViewRootImpl 统一调度 View 树的绘制流程，避免多线程竞争问题
+
+Activity（控制者）  
+└── PhoneWindow（容器）  
+    └── DecorView（根视图）  
+        ├── 系统预设 UI（状态栏/导航栏）  
+        └── Content（用户布局）  
+            └── View 组件树（Button/TextView等）  
+
+
 ### 10 如何启动其他应用的 Activity？
 
 在保证有权限访问的情况下，通过隐式 Intent 进行目标 Activity 的 **IntentFilter** 匹配，原则是：
