@@ -470,6 +470,8 @@ window （实现类是 PhoneWindow ）相当于一个容器，里面盛放着很
 
 ### 12 AsyncTask 的缺陷和问题，说说他的原理？
 
+详情，参考链接：https://blog.csdn.net/github_27263697/article/details/144420406
+
 AsyncTask 是一种**轻量级的异步任务类**，可以在线程池中执行后台任务，然后把执行的进度和最终结果传递给主线程并主线程中更新 UI，通过 AsyncTask 可以更加方便执行后台任务以及在主线程中访问 UI，但是 AsyncTask 并不适合进行特别耗时的后台任务，对于特别耗时的任务来说，建议使用线程池。
 
 AsyncTask 是一个抽象的泛型类，提供了 Params（参数类型）、Progress（后台任务的执行进度和类型） 和 Result（后台任务的返回结果的类型）这三个泛型参数，如果 AsyncTask 不需要传递具体的参数，那么这三个泛型参数可以用 Void 来代替。
