@@ -803,6 +803,68 @@ Dialog通常需要依附于一个Activity的上下文，因为它们属于UI的�
 
 可以，使用全局的 BroadCastRecevier 能进行跨进程通信，但是注意它只能被动接收广播，此外，LocalBroadCastRecevier 只限于本进程的广播间通信。
 
+
+Android广播主要可以按照以下标准进行分类及使用场景：
+  * 一、按发送方式分类：
+    * 普通广播（Normal Broadcast）
+        使用sendBroadcast()发送
+        特点：异步执行，所有接收者同时接收
+        场景：应用内部组件通信（如通知数据更新）
+    * 有序广播（Ordered Broadcast）
+        使用sendOrderedBroadcast()发送
+        特点：同步执行，接收者按优先级顺序处理
+        场景：需要拦截处理的系统广播（如短信广播）
+    
+  * 二、按注册方式分类：
+    * 静态广播（Static）
+        在AndroidManifest.xml中注册
+        场景：需要常驻的系统级监听（如开机启动广播）
+    * 动态广播（Dynamic）
+        使用registerReceiver()注册
+        场景：临时性事件监听（如网络状态变化）
+    
+  * 三、按作用范围分类：
+    * 全局广播（Global）
+        默认广播类型
+        场景：跨应用通信（如第三方SDK集成）
+    * 本地广播（Local）
+        使用LocalBroadcastManager
+        场景：应用内部组件通信（Activity与Service交互）
+    
+  * 四、按系统预定义分类：
+    * 系统广播（System）
+        场景示例： • 开机完成：ACTION_BOOT_COMPLETED • 时区变化：ACTION_TIMEZONE_CHANGED • 低电量：ACTION_BATTERY_LOW
+    * 自定义广播（Custom）
+        场景：应用特定事件通知（如文件下载完成）
+    
+  * 五、按传输方式分类：
+    * 显式广播（Explicit）
+        明确指定组件名
+        场景：定向通知特定组件（如启动指定Service）
+    * 隐式广播（Implicit）
+        通过IntentFilter匹配
+        场景：广播给未知接收者（需注意Android 8.0+限制）
+    
+最佳实践建议：
+    优先使用本地广播替代全局广播
+    Android 8.0+应避免使用隐式静态广播
+    动态广播必须及时注销（在onDestroy中unregister）
+    敏感广播应添加权限控制：
+    ``` xml
+    <receiver 
+        android:name=".MyReceiver"
+        android:permission="android.permission.SEND_SMS">
+        <intent-filter>
+            <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+        </intent-filter>
+    </receiver>
+    ```
+
+版本适配注意：
+    Android 7.0+：限制静态注册的隐式广播
+    Android 9.0+：限制后台接收广播
+    Android 10+：限制后台启动Activity的广播
+
 ### 22 数据加载更多涉及到分页，你是怎么实现的？
 
 一般 20 为一页，滑动到底部，监听滑动事件，加载更多。
