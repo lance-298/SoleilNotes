@@ -846,24 +846,24 @@ Android广播主要可以按照以下标准进行分类及使用场景：
         场景：广播给未知接收者（需注意Android 8.0+限制）
     
 最佳实践建议：
-    优先使用本地广播替代全局广播
-    Android 8.0+应避免使用隐式静态广播
-    动态广播必须及时注销（在onDestroy中unregister）
-    敏感广播应添加权限控制：
-    ``` xml
-    <receiver 
-        android:name=".MyReceiver"
-        android:permission="android.permission.SEND_SMS">
-        <intent-filter>
-            <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
-        </intent-filter>
-    </receiver>
-    ```
+    * 优先使用本地广播替代全局广播
+    * Android 8.0+应避免使用隐式静态广播
+    * 动态广播必须及时注销（在onDestroy中unregister）
+    * 敏感广播应添加权限控制：
+      ``` xml
+      <receiver 
+          android:name=".MyReceiver"
+          android:permission="android.permission.SEND_SMS">
+          <intent-filter>
+              <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+          </intent-filter>
+      </receiver>
+      ```
 
 版本适配注意：
-    Android 7.0+：限制静态注册的隐式广播
-    Android 9.0+：限制后台接收广播
-    Android 10+：限制后台启动Activity的广播
+    * Android 7.0+：限制静态注册的隐式广播
+    * Android 9.0+：限制后台接收广播
+    * Android 10+：限制后台启动Activity的广播
 
 ### 22 数据加载更多涉及到分页，你是怎么实现的？
 
