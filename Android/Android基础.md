@@ -716,11 +716,87 @@ intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 ### 20 怎么在Service中创建Dialog对话框？
 
+Dialog通常需要依附于一个Activity的上下文，因为它们属于UI的一部分，需要有窗口令牌（Window Token）才能显示。而Service并不具备这样的上下文，所以直接使用Service的Context来创建Dialog可能会导致错误，比如“Token null is not valid”这样的异常。
+
+那有没有办法绕过这个限制呢？有两种常见的方法：一种是使用系统级别的弹窗权限，另一种是通过启动一个透明的Activity来间接显示Dialog。这两种方法各有利弊，需要详细分析。
+
+先考虑第一种方法，系统级别的弹窗。这需要申请SYSTEM_ALERT_WINDOW权限，并且在Android 6.0（API 23）及以上版本中，这个权限需要用户手动授予，不能通过普通的运行时权限请求。用户需要在系统设置中手动开启，这可能会影响用户体验，但确实是一个可行的方法。具体步骤可能包括在AndroidManifest.xml中声明权限，检查权限是否已授予，如果没有则引导用户到设置页面开启，然后使用WindowManager来添加视图或创建Dialog，并设置其窗口类型为TYPE_APPLICATION_OVERLAY（针对Android O及以上）或TYPE_SYSTEM_ALERT（旧版本）。
+
+第二种方法是启动一个透明的Activity，在这个Activity中显示Dialog。这样Dialog就有了合法的Activity上下文，避免窗口令牌的问题。透明Activity的设计需要设置特定的主题，使其在后台不可见，用户感知不到Activity的存在，只看到Dialog。这种方法不需要特殊权限，但需要处理Activity的生命周期，确保Dialog关闭后Activity也能正确销毁，避免资源泄漏。
+
 ```java
-//设置类型
-dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
-//权限
-<uses-permission android:name="android.permission.SYSTEM_ALERT_WINOW" />
+  //方案一：使用系统弹窗权限‌
+  
+  添加权限到AndroidManifest.xml：
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  
+  在Service中检查并请求权限：
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+      Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
+  } else {
+      showDialog();
+  }
+  
+  创建并显示Dialog：
+  private void showDialog() {
+      Dialog dialog = new Dialog(this);
+      dialog.setContentView(R.layout.custom_dialog);
+      dialog.setTitle("Service Dialog");
+  
+      Window window = dialog.getWindow();
+      if (window != null) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+              window.setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+          } else {
+              window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+          }
+          window.addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+      }
+  
+      dialog.show();
+  }
+
+  
+  
+  ‌方案二：使用透明Activity‌
+  
+  创建透明主题：
+  <style name="TransparentDialogTheme" parent="Theme.AppCompat.Dialog">
+      <item name="android:windowIsTranslucent">true</item>
+      <item name="android:windowBackground">@android:color/transparent</item>
+      <item name="android:windowContentOverlay">@null</item>
+      <item name="android:windowNoTitle">true</item>
+  </style>
+  
+  在AndroidManifest.xml中注册Activity：
+  <activity
+      android:name=".TransparentDialogActivity"
+      android:theme="@style/TransparentDialogTheme"
+      android:excludeFromRecents="true"
+      android:taskAffinity="" />
+  
+  在Service中启动Activity：
+  Intent dialogIntent = new Intent(this, TransparentDialogActivity.class);
+  dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+  startActivity(dialogIntent);
+  
+  在TransparentDialogActivity中显示Dialog：
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this)
+              .setTitle("Service Dialog")
+              .setMessage("This dialog is shown from a Service via a transparent Activity.")
+              .setPositiveButton("OK", (dialog, which) -> finish());
+  
+      AlertDialog dialog = builder.create();
+      dialog.setOnDismissListener(dialogInterface -> finish());
+      dialog.show();
+  }
+  在验证这两种方案时，需要注意权限的正确处理，以及透明Activity的生命周期管理，确保没有内存泄漏或界面残留的问题。同时，考虑到不同Android版本的差异，进行充分的兼容性测试是必要的。
+
 ```
 
 ### 21 程序A能否接收到程序B的广播？
