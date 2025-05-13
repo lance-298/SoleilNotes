@@ -946,6 +946,33 @@ android:installLocation="internalOnly":表示程序只能被安装在内存中�
 //高版本基本没用，每个手机厂商都有一个手机管家，可以在里面设置自启动管理           
 ```
 
+
+参考链接  https://blog.csdn.net/m0_61840987/article/details/147292460
+
+要实现开机自启，需要掌握以下关键技术点：
+* 1、广播机制与BOOT_COMPLETED
+  * 广播：Android中的进程间异步消息机制，分为显式广播和隐式广播
+  * 开机完成广播：系统在完成启动引导后，会发送Intent.ACTION_BOOT_COMPLETED
+  * 接收广播：通过在AndroidManifest.xml中注册receiver，并声明intent-filter即可接收
+    
+    但是，从Android8.0（API 26）开始，为了节省电量和减少无用唤醒，大部分隐式广播被系统屏蔽，仅有几类（如BOOT_COMPLETED）仍然允许，但要求：
+    * 1、应用已启动至少一次
+    * 2、广播接收器必须显式注册（在manifest中注册即可）
+    * 3、如果广播出发后，需要在后台启动Activity，则必须先启动一个前台服务
+
+* 2、前台服务
+   * 用途：Android8.0+ 严格限制了后台服务，只有前台服务才能在后台长期运行
+   * 实现：调用startForeground()并提供一个持续更新的通知
+   * 渠道通知：从Android8.0(API26)开始，所有前台服务通知必须关联一个通知渠道
+
+     我们可以在接收BOOT_COMPLETED后，先启动一个前台服务，然后再服务内部启动MainActivity
+
+* 3、显式与隐式Intent启动Activity
+   * 从广播接收器直接调用context.startActivity（）启动Activity时，若应用不在前台或者锁屏状态，可能会被系统拦截
+   * 推荐做法：先启动一个透明前台服务，在服务中再startActivity（），这样可以保证启动成功
+
+
+
 ### 28 BroadcastReceiver，LocalBroadcastReceiver 区别？
 
 |          | BroadcastReceiver                                            | LocalBroadcastReceiver                       |
