@@ -1249,6 +1249,58 @@ Handler 允许我们发送延时消息，如果在延时期间用户关闭了 Ac
 
 优先处理消息的权利。
 
+关键优势：
+* 实现消息处理的前置过滤;支持多级消息处理管道;避免创建过多 Handler 子类;代码解耦与模块化‌;方便进行单元测试（可 mock Callback）
+
+在 Android 的 Handler 机制中，Callback 接口主要有以下重要作用：
+* 1. 消息拦截 
+    * 当给 Handler 设置 Callback 后，消息会先经过 Callback 处理。若返回 true 则表示消息已被消费，不会传递到 Handler 的 handleMessage() 方法。
+  ``` java
+      Handler handler = new Handler(new Handler.Callback() {
+      @Override
+      public boolean handleMessage(Message msg) {
+      if (msg.what == SPECIFIC_MSG) {
+      // 拦截特定消息自行处理
+      return true; // 阻断后续处理
+      }
+      return false; // 放行给 Handler 的 handleMessage
+      }
+      });
+
+    // 原始 Handler 的处理逻辑（当 Callback 返回 false 时才会执行）
+    handler = new Handler(handler.getLooper(), callback) {
+    @Override
+    public void handleMessage(Message msg) {
+    // 此处处理未被 Callback 拦截的消息
+    }
+    };
+  ```
+* 2.优先级控制 
+  * 可以创建多个不同优先级的 Callback 链
+```java
+// 高优先级回调（先执行）
+Handler.Callback highPriorityCallback = msg -> {
+    if (msg.what == HIGH_PRIORITY_MSG) {
+        // 处理高优先级消息
+        return true;
+    }
+    return false;
+};
+
+// 普通优先级回调（后执行）
+Handler.Callback normalCallback = msg -> {
+    // 处理普通消息
+    return false;
+};
+
+// 通过组合模式实现回调链
+Handler handler = new Handler(new ChainedCallback(highPriorityCallback, normalCallback));
+```
+
+* 3. 代码解耦与模块化‌
+  * 分离业务逻辑‌, 通过外部实现 Callback 接口，可将消息处理逻辑从 Handler 类中剥离，提升代码可维护性
+
+
 ##### 创建 Message 实例的最佳方式
 
 - 通过 Message 的静态方法 Message.obtain()
@@ -1291,6 +1343,8 @@ new Thread(new Runnable() {
 ```
 
 [Handler 都没搞懂，拿什么去跳槽啊？](https://juejin.im/post/5c74b64a6fb9a049be5e22fc#heading-7)
+
+[Handler 机制详解](https://juejin.cn/post/7477532787114410034)
 
 ### 33 硬件加速
 
