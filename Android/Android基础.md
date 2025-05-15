@@ -1020,6 +1020,57 @@ assets：不会在 R 文件中生成相应标记，存放到这里的资源在�
 
 res：会在 R 文件中生成 id 标记，资源在打包时如果使用到则打包到安装包中，未用到不会打入安装包中。
 
+
+
+* 1. 文件类型与组织方式‌
+
+   * assets 目录‌
+     * 支持存放任何类型的文件（如 .txt、.mp3、.db），允许自定义多级子目录，类似文件系统。
+     * 示例‌：assets/config.json 或 assets/databases/app.db。
+
+   * res 目录‌
+     * 严格按子目录分类存放资源（如 drawable、layout、values），且子目录名称固定，无法自定义层级。
+     * 示例‌：res/drawable/icon.png，res/layout/activity_main.xml。
+
+* 2. 编译与优化处理‌
+
+    * assets 目录‌
+      * 文件直接打包进 APK，‌不做编译优化‌，保持原始格式。
+      * 适用场景‌：未加密的数据库、原生配置文件等需保持完整性的资源。
+
+    * res 目录‌
+      * 大部分资源（如 XML 布局、图片）会被编译为二进制格式，部分图片会被压缩优化，生成 R.java 方便引用。
+      * 例外‌：res/raw 目录下的文件保持原样，但与 assets 的区别在于其资源会映射到 R.raw.xxx。
+
+* 3. 资源引用方式‌
+
+    * assets 访问示例‌
+      * 需通过 AssetManager 手动处理文件路径和输入流：
+      * val inputStream = assets.open("config/config.json")
+      * 引用时直接使用文件名，无需自动生成的资源 ID。
+
+    * res 访问示例‌
+    * 通过 R 类生成的资源 ID 直接引用：
+    * val text = getString(R.string.app_name)
+    * val drawable = getDrawable(R.drawable.icon)
+    * 系统自动处理资源映射和类型校验。
+
+* 4. 适用场景对比‌
+   场景‌	‌推荐目录‌	‌理由‌
+   原生配置文件/SQLite 数据库	assets	需保持文件原始格式且不需要编译优化
+   图片、布局、字符串资源	res	依赖系统自动优化（如压缩、二进制转换），提升性能并简化引用
+   游戏资源包或字典文件	assets	需自定义目录结构，支持动态加载
+   需要跨模块引用的资源	res	库项目的 res 资源会自动导入到依赖模块中，而 assets 需手动复制
+
+* 5. 核心特性总结‌
+   特性‌	‌assets‌	‌res‌
+   文件类型‌	任意类型，无编译处理	限定类型，多数资源会优化编译
+   目录结构‌	支持多级自定义目录	固定子目录，不可自定义
+   资源引用‌	通过文件名和 AssetManager 访问	通过 R 类生成的 ID 引用
+   兼容性‌	全版本兼容	全版本兼容
+
+总结‌：优先使用 res 目录管理需系统优化且类型明确的资源；选择 assets 处理原生文件或需要自定义目录结构的场景。
+
 ### 32 Handler
 
 ![](../asset/handler.png)
