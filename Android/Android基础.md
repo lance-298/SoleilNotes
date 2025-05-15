@@ -1077,8 +1077,8 @@ res：会在 R 文件中生成 id 标记，资源在打包时如果使用到则�
 
 #### 角色
 
-* Handler : 负责发送并处理消息
-* Looper：：负责关联线程以及消息的分发，在该线程下从 MessageQueue 获取 Message，分发给 Handler ；
+* Handler : 消息生产者，负责发送并处理消息
+* Looper：消息消费者，负责关联线程以及消息的分发，在该线程下从 MessageQueue 获取 Message，分发给 Handler ；
 * MessageQueue ：消息队列，负责消息的存储与管理，负责管理由 Handler 发送过来的 Message；
 * Message：消息，封装信息；
 
@@ -1331,15 +1331,44 @@ handler.postDelay 并不是先等待一定的时间再放入到MessageQueue中�
 
 ##### 子线程里弹 Toast 
 
+如果直接在子线程中调用 Toast.makeText().show()，会抛出 CalledFromWrongThreadException 异常
+
+在子线程中显示 Toast 需要特殊处理，因为 Toast 的显示依赖 Handler 机制。以下是两种实现方式：
+
+* 1. 常规方式（需要 Looper 支持）
+
+
 ```java
 new Thread(new Runnable() {
-  @Override
-  public void run() {
-    Looper.prepare();
-    Toast.makeText(HandlerActivity.this, "test", Toast.LENGTH_SHORT).show();
-    Looper.loop();
-  }
+    @Override
+    public void run() {
+            // 初始化当前线程的 Looper
+            Looper.prepare();
+    
+            // 在子线程中显示 Toast
+            Toast.makeText(getApplicationContext(), "子线程Toast", Toast.LENGTH_SHORT).show();
+    
+            // 启动消息循环（重要！否则 Toast 无法显示）
+            Looper.loop();
+            }
 }).start();
+```
+
+* 2. 通过主线程 Handler 转发（推荐方式）：
+```java
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        // 使用主线程的 Handler 发送显示请求
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), "来自子线程的Toast", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}).start();
+
 ```
 
 [Handler 都没搞懂，拿什么去跳槽啊？](https://juejin.im/post/5c74b64a6fb9a049be5e22fc#heading-7)
