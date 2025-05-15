@@ -1371,6 +1371,14 @@ new Thread(new Runnable() {
 
 ```
 
+关键点说明：
+* 1. 方式一必须调用 Looper.prepare() 和 Looper.loop() 来初始化线程的消息队列
+* 2. 方式二通过主线程的 Looper 操作 UI 更安全，避免潜在的内存泄漏问题
+* 3. 推荐优先使用方式二，因为：
+   * 不需要手动管理 Looper
+   * 符合 Android 的 UI 线程安全规范
+   * 避免忘记调用 Looper.quit() 导致线程无法退出的问题
+
 [Handler 都没搞懂，拿什么去跳槽啊？](https://juejin.im/post/5c74b64a6fb9a049be5e22fc#heading-7)
 
 [Handler 机制详解](https://juejin.cn/post/7477532787114410034)
