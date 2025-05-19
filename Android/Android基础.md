@@ -2610,8 +2610,139 @@ RecyclerViewPool底层是使用了SparseArray来分开存储不同ViewType的Vie
 ### 127  Binder特点
 
 
+### 128 进程间通信IPC方式有哪些？
+
+ABC - SIM - F
+AIDL Binder ContentProvider Socket Intent Messenger 共享文件File
+以下是Android进程间通信（IPC）主要方式及其使用场景的详细说明：
+
+* 一、Intent与Bundle
+
+    * 使用场景‌
+        * 适用于四大组件（Activity/Service/BroadcastReceiver）之间的轻量级通信，如启动其他应用的Activity或发送广播
+    * 特点‌
+      * 支持基本数据类型、String、Bundle及Parcelable对象
+      * 隐式Intent可实现跨应用组件调用
+    * ```java
+      // 启动其他应用的Activity
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName("com.target.pkg", "TargetActivity"));
+        intent.putExtra("key", "value");
+        startActivity(intent);
+    * ```
+
+
+* 二、AIDL/Binder
+
+    * 使用场景‌
+        * 需要复杂数据交互或远程方法调用（RPC）的场景，如系统服务调用或跨应用功能集成
+    * 特点
+      * 支持自定义对象（需实现Parcelable）
+      * 高性能双向通信，支持并发请求
+    * ```java
+      // ICalcService.aidl
+        interface ICalcService {
+        int add(int a, int b);
+        void registerCallback(ICalcCallback callback);
+    }
+    * ```
+
+
+
+客户端通过绑定Service获取代理对象进行方法调用
+
+* 三、Messenger
+
+    * 使用场景‌
+        * 简单的单向消息传递场景，如非实时状态通知或命令发送
+    * 特点‌
+      * 基于Binder封装的串行消息队列
+      * 通过Message传递Bundle支持的数据类型
+    * 示例
+    * ```java
+      服务端：
+      Handler handler = new Handler(Looper.getMainLooper()) {
+        @Override public void handleMessage(Message msg) {
+        // 处理客户端消息
+        }
+        };
+        Messenger messenger = new Messenger(handler);
+
+        客户端通过Messenger发送Message对象
+    * ```
+
+* 四、ContentProvider
+
+    * 使用场景‌
+      * 结构化数据共享场景，如通讯录、多媒体库等系统级数据访问
+    * 特点
+      * 提供标准CRUD操作接口
+      * 支持权限控制与数据变更通知
+    * 示例‌
+    * ```java
+      // 查询其他应用的数据
+          Cursor cursor = getContentResolver().query(
+          Uri.parse("content://com.example.provider/data"),
+          null, null, null, null
+          );
+    * ```
+
+* 五、文件共享
+
+    * 使用场景‌
+        * 非实时数据交换场景，如离线日志收集或配置同步
+    * 特点‌
+      * 通过SD卡或应用专属目录共享文件
+      * 需自行处理并发读写问题
+    * 示例‌
+      * 两个应用通过读写/sdcard/shared_data.txt实现数据交换
+      
+* 六、Socket网络通信
+
+  * 使用场景‌
+    * 跨设备或远程服务通信，如即时通讯或IoT设备控制
+  * 特点‌
+    * 支持TCP/UDP协议
+    * 需要网络权限及端口管理
+  * 示例‌
+    * 建立TCP服务端监听端口，客户端通过Socket连接发送指令
+  
+* 七、BroadcastReceiver
+
+    * 使用场景‌
+        * 系统级事件通知或应用间广播同步，如网络状态变化或自定义事件广播
+    * 示例‌
+    * ```java
+      发送自定义广播：
+          Intent broadcast = new Intent("CUSTOM_ACTION");
+          sendBroadcast(broadcast);
+    * ```
+
+
+* 八、共享内存
+
+  * 使用场景‌
+    * 大数据量传输场景，如图像处理或音视频流传输
+  * 特点‌
+    * 通过MemoryFile或Ashmem实现
+    * 需配合Binder传递文件描述符
+  * 示例‌
+    * 相机应用与图像处理服务共享图像缓存区
+
+* 选择建议
+  * 简单数据传递‌：优先使用Intent/Bundle
+  * 结构化数据共享‌：选择ContentProvider
+  * 复杂交互需求‌：采用AIDL实现双向通信
+  * 大数据传输‌：结合共享内存与Binder机制
+  * 实时性要求低‌：使用文件共享或Socket
+
+* 注意事项‌：
+  * 跨进程对象传递需完全实现Parcelable接口
+  * 使用RemoteCallbackList管理跨进程回调监听
+  * 避免在主线程执行耗时IPC操作以防ANR
 
 ### 128 说说 AIDL 流程（字节面试）
+
 
 
 
