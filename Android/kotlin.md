@@ -160,6 +160,92 @@ class NewFragment {
 ```
 
 
+* 一、伴生对象核心特性‌
+
+定义方式‌:
+使用 companion object 在类内部声明，一个类最多只能有一个伴生对象。
+```kotlin
+class MyClass {
+companion object {
+const val PI = 3.14
+fun printMsg() = println("Hello")
+}
+}
+```
+
+功能定位‌:
+替代 Java 的静态成员（属性和方法）
+可访问外部类的私有成员（如私有构造函数）
+支持扩展函数和继承
+
+调用语法‌
+通过类名直接访问伴生对象成员，无需实例化：
+```kotlin
+MyClass.PI         // 访问属性
+MyClass.printMsg() // 调用方法
+```
+
+* 二、与Java静态成员的对比‌
+特性‌	‌Kotlin 伴生对象‌	‌Java 静态成员‌
+声明方式‌	companion object 内部定义	static 关键字修饰
+访问控制‌	可访问外部类私有成员	仅能访问类公开成员
+单例性‌	默认单例（整个类共享）	与类绑定，全局唯一
+扩展支持‌	支持扩展函数	不支持
+
+
+* 三、典型使用场景‌
+工厂模式‌
+通过伴生对象封装对象创建逻辑：
+```koltin
+class User private constructor(val name: String) {
+companion object {
+fun create(name: String) = User(name.trim())
+}
+}
+```
+
+常量定义‌
+使用 const val 声明编译时常量：
+```koltin
+companion object {
+const val MAX_COUNT = 100
+}
+```
+
+* 工具方法‌
+提供类相关的静态工具方法：
+```koltin
+companion object {
+fun formatDate(time: Long): String { ... }
+}
+```
+
+
+* 四、进阶特性‌
+命名伴生对象‌
+可为伴生对象指定名称（默认名称为 Companion）：
+```koltin
+companion object Parser {
+fun parse(json: String) = { }
+}
+// 调用：MyClass.Parser.parse(...)
+```
+
+
+
+JVM 注解支持‌
+@JvmStatic：将伴生对象方法暴露为真正的 Java 静态方法
+@JvmField：将属性暴露为 Java 静态字段
+
+
+* 五、注意事项‌
+性能差异‌：伴生对象成员在字节码中实际是通过内部类实现的，与 Java 静态成员底层机制不同
+线程安全‌：伴生对象初始化是线程安全的（首次访问时初始化）
+避免滥用‌：大型伴生对象可能导致类职责不清晰，建议拆分逻辑
+
+通过伴生对象，Kotlin 在保留面向对象特性的同时，提供了比 Java 静态成员更灵活的设计模式支持。
+
+
 
 #### 7 @JvmField 和 @JvmStatic 的使用
 
