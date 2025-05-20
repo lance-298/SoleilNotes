@@ -180,7 +180,7 @@ fun printMsg() = println("Hello")
 
 调用语法‌
 通过类名直接访问伴生对象成员，无需实例化：
-```kotlin
+```koltin
 MyClass.PI         // 访问属性
 MyClass.printMsg() // 调用方法
 ```
@@ -268,6 +268,95 @@ class NumberTest {
       System.out.println(NumberTest.flag);
 }
 ```
+
+
+
+* 一、@JvmField 核心作用‌
+
+功能定位‌
+将 Kotlin 属性直接暴露为 Java 的‌公共字段‌（无 getter/setter），消除 Kotlin 属性访问的封装开销。
+
+适用场景‌
+
+需要与 Java 代码互操作时简化字段访问
+性能敏感场景（如频繁访问的常量）
+
+使用限制‌
+
+只能用于 val/var 属性
+不能与 private 或自定义 getter/setter 共存
+```kotlin
+class User {
+companion object {
+@JvmField val MAX_AGE = 100 // Java 端可直接通过 User.MAX_AGE 访问
+}
+}
+```
+
+
+* 二、@JvmStatic 核心作用‌
+
+功能定位‌
+将伴生对象成员（方法/属性）编译为真正的 ‌Java 静态成员‌，保持 Java 调用习惯。
+
+双重暴露机制‌
+
+原始路径：User.Companion.getXXX()
+静态路径：User.getXXX()
+```kotlin
+class Logger {
+    companion object {
+        @JvmStatic fun log(msg: String) {  } // Java 可通过 Logger.log() 调用
+    }
+}
+```
+
+
+* 三、对比总结‌
+特性‌	@JvmField	@JvmStatic
+作用目标‌	属性（val/var）	伴生对象方法/属性
+Java 调用方式‌	直接访问字段（如 User.MAX_AGE）	静态方法调用（如 Logger.log()）
+性能影响‌	减少 getter 调用开销	消除 Companion 实例访问开销
+典型用途‌	常量定义、DTO 类字段	工具类方法、工厂方法
+
+* 四、实战示例‌
+
+DTO 类字段优化‌
+```kotlin
+data class Person(
+@JvmField val name: String, // Java 直接读取字段
+@JvmField var age: Int
+)
+```
+
+工具类静态方法‌
+```kotlin
+class StringUtils {
+companion object {
+@JvmStatic
+fun isEmpty(s: String?) = s.isNullOrEmpty()
+}
+}
+// Java 调用：StringUtils.isEmpty("test")
+```
+
+
+* 五、注意事项‌
+
+互操作一致性‌
+
+优先对需要 Java 调用的成员使用注解
+避免过度使用（Kotlin 代码内部无需注解）
+
+初始化时机‌
+
+@JvmField 属性需在声明时初始化（或 init 块中）
+
+注解冲突‌
+
+不能与 const val 共用（const 已隐含静态性）
+
+通过合理使用这两个注解，可显著提升 Kotlin 与 Java 混合开发时的代码简洁性和性能。
 
 #### 8  @JvmOverloads 的作用？
 
