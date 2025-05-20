@@ -2742,8 +2742,26 @@ AIDL Binder ContentProvider Socket Intent Messenger 共享文件File
   * 避免在主线程执行耗时IPC操作以防ANR
 
 ### 128 说说 AIDL 流程（字节面试）
+参考链接 https://juejin.cn/post/7123129439898042376
+
+AIDL 全称 Android Interface Definition Language ，安卓接口定义语言。
+AIDL 用来解决 Android 的跨进程通信问题，底层原理是 Binder ，实现思路是 C / S 架构思想。
+
+Server：接收请求，提供处理逻辑，并发送响应数据。
+Client：发起请求，接收响应数据。
+
+C / S 之间通过 Binder 对象进行通信。
+
+Server 需要实现一个 Service 作为服务器，Client 侧则需要调用发起请求的能力。
+Client 需要调用 bindService 绑定到远程服务，然后通过 ServiceConnection 来接收远程服务的 Binder 对象。拿到 Binder 对象后就可以调用远程服务中定义的方法了。
+
+因为是跨进程通信，所以需要实现序列化，AIDL 专门为 Android 设计，所以它的序列化不能使用 Java 提供的 Serializable ，而是 Android 提供的 Parcelable 接口
 
 
+使用步骤：
+* 定义AIDL接口文件
+* 实现Stub类
+* 客户端绑定服务并调用方法
 
 
 ### 129 说说 Kotlin 中的内联函数？
